@@ -1,11 +1,22 @@
 package sakk;
 
-/** A sakktábla. (Egyelőre csak annyi, amennyi a Figura fordításához kell; a 3. lépés bővíti.) */
+/** A sakktábla: 8×8 mező, mindegyiken egy figura vagy null. */
 public class Tabla {
     private final Figura[][] mezok = new Figura[8][8];
 
     public Figura get(Mezo m) {
         return mezok[m.oszlop()][m.sor()];
+    }
+
+    public void tesz(Mezo m, Figura f) {
+        mezok[m.oszlop()][m.sor()] = f;
+    }
+
+    /** Leveszi és visszaadja a mezőn álló figurát (vagy null-t). */
+    public Figura levesz(Mezo m) {
+        Figura f = get(m);
+        tesz(m, null);
+        return f;
     }
 
     /** Áll-e figura honnan és hova KÖZÖTT (egyenes vagy átlós vonalon). */
