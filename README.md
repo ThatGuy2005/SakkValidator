@@ -11,9 +11,37 @@ java -cp target/classes sakk.Main
 mvn test
 ```
 
-Vagy IntelliJ-ből: `sakk.Main` futtatása. Lépés formátuma: `e2 e4`, kilépés: `q`.
-Gyalog beérésekor a program megkérdezi, mivé változzon (`V`/`B`/`F`/`H`, alapból vezér).
-Ha a Windows-konzolon `?` jelenik meg a figurák helyén, előbb: `chcp 65001`.
+Vagy IntelliJ-ből: `sakk.Main` futtatása, a tesztekhez a `src/test/java` mappán *Run 'All Tests'*.
+
+- Lépés formátuma: `e2 e4`, kilépés: `q`.
+- Gyalog beérésekor a program megkérdezi, mivé változzon (`V`/`B`/`F`/`H`, alapból vezér).
+- Ha a Windows-konzolon `?` jelenik meg a figurák helyén, előbb: `chcp 65001`.
+
+## Támogatott szabályok
+
+- Minden figura alaplépései: király, vezér, bástya, futó, huszár, gyalog.
+- Ütés; saját figura nem üthető; csúszó figurák útját nem zárhatja el semmi.
+- Gyalog: egy lépés előre, kettő a kezdősorból (ha üres az út), átlós ütés.
+- **Saját sakk tilalma**: kötött figura nem léphet el, a király nem léphet támadott mezőre,
+  és a sakkot hárítani kell.
+- **Sáncolás** (rövid és hosszú): a király és a bástya nem mozdult, köztük üres a sor,
+  a király nincs sakkban, és nem halad át / nem érkezik támadott mezőre.
+- **En passant**: csak közvetlenül az ellenfél kettős gyaloglépése után; az ütött gyalog lekerül.
+- **Átváltozás**: választható vezér/bástya/futó/huszár, alapból vezér.
+- Felváltva lépés; minden lépés után `sakk`, `matt` vagy `patt` kiírása. Matt és patt
+  esetén a játszma véget ér.
+
+## Ismert korlátok
+
+- Nincs döntetlen szabály: 50 lépéses szabály, háromszori ismétlés, anyaghiány.
+- Nincs feladás, döntetlenajánlat, visszalépés (undo).
+- Csak koordinátás bemenet (`e2 e4`), algebrai jelölés (`Nf3`, `O-O`) nem.
+  Sáncolás: a király két mezős lépésével (`e1 g1`).
+- Nincs FEN-betöltés: a játék mindig a kezdőállásból indul (tesztekben kézzel rakható össze állás).
+- A `Tabla.tamadott()` a gyalog átlós támadását csak foglalt mezőre látja (mert a gyalog
+  `lephet()`-je ütést kér). Ahol ez számít (sáncolásnál az átlépett mező), a program a
+  királyt ténylegesen odahelyezi egy másolaton, így a szabály helyesen működik.
+- A matt/patt vizsgálat nyers erővel próbál ki minden lépést (64×64); 8×8-as táblán ez gyors.
 
 ## Felépítés
 
@@ -23,8 +51,103 @@ Ha a Windows-konzolon `?` jelenik meg a figurák helyén, előbb: `chcp 65001`.
 | `Figura` | Absztrakt ős: `lephet()` és `jel()`; közös segédek: `csuszik()`, `celSzabad()`. |
 | `Bastya`, `Futo`, `Vezer` | Csúszó figurák: csak az irány-listájukat adják át a `csuszik()`-nak. |
 | `Kiraly`, `Huszar`, `Gyalog` | Saját geometria; a király a sáncolást, a gyalog az en passant-t is felismeri. |
-| `Tabla` | Az állás. Kérdésekre válaszol (`utbanVan`, `tamadott`, `sakkbanVan`, `enPassantCel`), ellenőriz (`hibaOka`/`szabalyos`) és végrehajt (`vegrehajt`). |
+| `Tabla` | Az állás. Kérdésekre válaszol (`utbanVan`, `tamadott`, `sakkbanVan`, `enPassantCel`), ellenőriz (`hibaOka`/`szabalyos`, `allapot`) és végrehajt (`vegrehajt`). |
 | `TablaNezet`, `Main` | Kirajzolás és a beolvasó ciklus. |
+
+### Osztálydiagram
+
+```mermaid
+classDiagram
+    direction TB
+
+    class Figura {
+        <<abstract>>
+        ~Szin szin
+        ~boolean mozdult
+        +lephet(Mezo honnan, Mezo hova, Tabla t)* boolean
+        +jel()* char
+        +atvaltozik(Mezo hova) boolean
+        #celSzabad(Mezo hova, Tabla t) boolean
+        #csuszik(Mezo honnan, Mezo hova, Tabla t, List~Irany~ iranyok) boolean
+    }
+    class Kiraly {
+        +lephet(...) boolean
+        -sancolhat(Mezo honnan, boolean rovid, Tabla t) boolean
+    }
+    class Vezer {
+        +lephet(...) boolean
+    }
+    class Bastya {
+        +lephet(...) boolean
+    }
+    class Futo {
+        +lephet(...) boolean
+    }
+    class Huszar {
+        +lephet(...) boolean
+    }
+    class Gyalog {
+        +lephet(...) boolean
+        +atvaltozik(Mezo hova) boolean
+        -enPassant(Mezo honnan, Mezo hova, Tabla t) boolean
+    }
+
+    Figura <|-- Kiraly
+    Figura <|-- Vezer
+    Figura <|-- Bastya
+    Figura <|-- Futo
+    Figura <|-- Huszar
+    Figura <|-- Gyalog
+
+    class Tabla {
+        -Figura[][] mezok
+        -Lepes utolsoLepes
+        +kezdoAllas()$ Tabla
+        +get(Mezo m) Figura
+        +tesz(Mezo m, Figura f)
+        +levesz(Mezo m) Figura
+        +utbanVan(Mezo honnan, Mezo hova) boolean
+        +tamadott(Mezo m, Szin tamado) boolean
+        +sakkbanVan(Szin szin) boolean
+        +enPassantCel() Mezo
+        +hibaOka(Mezo honnan, Mezo hova, Szin kiLep) String
+        +szabalyos(Mezo honnan, Mezo hova, Szin kiLep) boolean
+        +allapot(Szin kiLep) String
+        +vegrehajt(Mezo honnan, Mezo hova, char atvaltozas)
+    }
+    class Szin {
+        <<enumeration>>
+        FEHER
+        FEKETE
+        +ellenfel() Szin
+    }
+    class Irany {
+        <<enumeration>>
+        +int dx
+        +int dy
+        +EGYENES$
+        +ATLOS$
+        +MIND$
+    }
+    class Mezo {
+        <<record>>
+        +int oszlop
+        +int sor
+        +of(String s)$ Mezo
+    }
+    class Lepes {
+        <<record>>
+        +Mezo honnan
+        +Mezo hova
+        +Figura f
+    }
+
+    Tabla o-- "0..64" Figura : mezok
+    Tabla --> "0..1" Lepes : utolsoLepes
+    Figura --> Szin
+    Figura ..> Tabla : lephet() kérdezi
+    Figura ..> Irany : csuszik()
+```
 
 Nincs `switch` a figura típusára a lépéslogikában: a `Tabla` minden figurától a saját
 `lephet()`-jével kérdezi meg, léphet-e. Így működik a `tamadott()` is: egy mező akkor
@@ -38,8 +161,15 @@ Egy lépés ellenőrzése (`Tabla.hibaOka`) három lépcsős:
 
 Sáncolásnál ezen felül: a király nem lehet sakkban, és nem haladhat át támadott mezőn.
 
-Minden lépés után a program kiírja, ha a következő fél `sakk`-ban, `matt`-ban vagy
-`patt`-ban van (`Tabla.allapot`). Matt és patt esetén a játszma véget ér.
+## Tesztek
+
+JUnit 5, `src/test/java/sakk`:
+
+- `MezoTest`: algebrai jelölés beolvasása, hibás bemenetek (paraméterezett).
+- `FiguraTest`: minden figurára szabályos és szabálytalan lépések üres táblán
+  (paraméterezett), elzárt út, saját figura ütése, a `lephet()` mellékhatás-mentessége.
+- `TablaTest`: saját sakk tilalma (kötés, támadott mezőre lépés, sakk hárítása), sáncolás
+  (megengedett és 6 tiltott eset), en passant, átváltozás, sakk/matt/patt.
 
 ## LSP: belefér-e a gyalog különleges szabályai az ős szerződésébe?
 
