@@ -37,11 +37,69 @@ public class Tabla {
         return f;
     }
 
+    /**
+     * Miért szabálytalan a lépés? null, ha szabályos.
+     * Sorrend: van-e saját figura, léphet-e így (lephet), és nem kerül-e sakkba a saját király.
+     */
+    public String hibaOka(Mezo honnan, Mezo hova, Szin kiLep) {
+        Figura f = get(honnan);
+        if (f == null) return "nincs figura a(z) " + honnan + " mezőn";
+        if (f.szin != kiLep) return "az nem a te figurád";
+        if (!f.lephet(honnan, hova, this)) return "a figura nem léphet így";
+
+        Tabla proba = masolat();
+        proba.athelyez(honnan, hova);
+        if (proba.sakkbanVan(kiLep)) return "a saját király sakkba kerülne";
+        return null;
+    }
+
+    public boolean szabalyos(Mezo honnan, Mezo hova, Szin kiLep) {
+        return hibaOka(honnan, hova, kiLep) == null;
+    }
+
     /** Végrehajtja a lépést (ellenőrzés nélkül): ütés esetén a célmezőn álló figura lekerül. */
     public void vegrehajt(Mezo honnan, Mezo hova) {
+        Figura f = athelyez(honnan, hova);
+        f.mozdult = true;
+    }
+
+    /** Csak a figurákat mozgatja; a figurák állapotát nem módosítja, így másolaton is biztonságos. */
+    private Figura athelyez(Mezo honnan, Mezo hova) {
         Figura f = levesz(honnan);
         tesz(hova, f);
-        f.mozdult = true;
+        return f;
+    }
+
+    /** Támadja-e a megadott színű fél az m mezőt? Minden figurát a saját lephet()-jével kérdez meg. */
+    public boolean tamadott(Mezo m, Szin tamado) {
+        for (Mezo honnan : Mezo.OSSZES) {
+            Figura f = get(honnan);
+            if (f != null && f.szin == tamado && f.lephet(honnan, m, this)) return true;
+        }
+        return false;
+    }
+
+    /** Sakkban van-e a megadott színű király? (Király nélküli állásban: nem.) */
+    public boolean sakkbanVan(Szin szin) {
+        Mezo k = kiralyMezo(szin);
+        return k != null && tamadott(k, szin.ellenfel());
+    }
+
+    private Mezo kiralyMezo(Szin szin) {
+        for (Mezo m : Mezo.OSSZES) {
+            // instanceof csak a király megkeresésére, nem lépéslogikára
+            if (get(m) instanceof Kiraly k && k.szin == szin) return m;
+        }
+        return null;
+    }
+
+    /** Sekély másolat: ugyanazok a figura-objektumok, de saját mezőtömb. */
+    private Tabla masolat() {
+        Tabla t = new Tabla();
+        for (int o = 0; o < 8; o++) {
+            t.mezok[o] = mezok[o].clone();
+        }
+        return t;
     }
 
     /** Áll-e figura honnan és hova KÖZÖTT (egyenes vagy átlós vonalon). */

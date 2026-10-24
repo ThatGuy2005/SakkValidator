@@ -31,7 +31,7 @@ public class Main {
                 continue;
             }
 
-            String hiba = hiba(tabla, honnan, hova, kiLep);
+            String hiba = tabla.hibaOka(honnan, hova, kiLep);
             if (hiba != null) {
                 System.out.println("szabálytalan: " + hiba);
                 continue;
@@ -41,14 +41,5 @@ public class Main {
             System.out.println(TablaNezet.rajzol(tabla));
             kiLep = kiLep.ellenfel();
         }
-    }
-
-    /** Ideiglenes ellenőrzés; a 8. lépésben a Tabla.szabalyos() veszi át. */
-    private static String hiba(Tabla t, Mezo honnan, Mezo hova, Szin kiLep) {
-        Figura f = t.get(honnan);
-        if (f == null) return "nincs figura a(z) " + honnan + " mezőn";
-        if (f.szin != kiLep) return "az nem a te figurád";
-        if (!f.lephet(honnan, hova, t)) return "a figura nem léphet így";
-        return null;
     }
 }
