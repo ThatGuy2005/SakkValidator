@@ -149,6 +149,25 @@ public class Tabla {
         return k != null && tamadott(k, szin.ellenfel());
     }
 
+    /** Van-e a megadott színnek legalább egy szabályos lépése? */
+    public boolean vanSzabalyosLepese(Szin szin) {
+        for (Mezo honnan : Mezo.OSSZES) {
+            Figura f = get(honnan);
+            if (f == null || f.szin != szin) continue;
+            for (Mezo hova : Mezo.OSSZES) {
+                if (szabalyos(honnan, hova, szin)) return true;
+            }
+        }
+        return false;
+    }
+
+    /** A lépésre következő fél helyzete: "matt", "patt", "sakk", vagy null, ha egyik sem. */
+    public String allapot(Szin kiLep) {
+        boolean sakk = sakkbanVan(kiLep);
+        if (!vanSzabalyosLepese(kiLep)) return sakk ? "matt" : "patt";
+        return sakk ? "sakk" : null;
+    }
+
     private Mezo kiralyMezo(Szin szin) {
         for (Mezo m : Mezo.OSSZES) {
             // instanceof csak a király megkeresésére, nem lépéslogikára

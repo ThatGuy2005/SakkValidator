@@ -175,6 +175,40 @@ class TablaTest {
         assertEquals(SAKKBA, hiba("b5", "c6", FEHER));
     }
 
+    // --- sakk, matt, patt ---
+
+    @Test
+    void kezdoAllasbanNincsSemmi() {
+        t = Tabla.kezdoAllas();
+        assertNull(t.allapot(FEHER));
+    }
+
+    @Test
+    void sakk() {
+        tesz("e1", new Kiraly(FEHER));
+        tesz("e8", new Bastya(FEKETE));
+        tesz("a8", new Kiraly(FEKETE));
+        assertEquals("sakk", t.allapot(FEHER));
+    }
+
+    @Test
+    void bolondMatt() {
+        t = Tabla.kezdoAllas();
+        lep("f2", "f3");
+        lep("e7", "e5");
+        lep("g2", "g4");
+        lep("d8", "h4");
+        assertEquals("matt", t.allapot(FEHER));
+    }
+
+    @Test
+    void patt() {
+        tesz("h8", new Kiraly(FEKETE));
+        tesz("g6", new Vezer(FEHER));
+        tesz("f7", new Kiraly(FEHER));
+        assertEquals("patt", t.allapot(FEKETE));
+    }
+
     // --- átváltozás ---
 
     @Test

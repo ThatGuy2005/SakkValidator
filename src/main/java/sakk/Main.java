@@ -46,6 +46,13 @@ public class Main {
             System.out.println("szabályos");
             System.out.println(TablaNezet.rajzol(tabla));
             kiLep = kiLep.ellenfel();
+
+            String allapot = tabla.allapot(kiLep);
+            if (allapot != null) System.out.println(allapot);
+            if ("matt".equals(allapot) || "patt".equals(allapot)) {
+                System.out.println("Vége a játszmának.");
+                break;
+            }
         }
     }
 }

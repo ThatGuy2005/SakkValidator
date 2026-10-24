@@ -38,6 +38,9 @@ Egy lépés ellenőrzése (`Tabla.hibaOka`) három lépcsős:
 
 Sáncolásnál ezen felül: a király nem lehet sakkban, és nem haladhat át támadott mezőn.
 
+Minden lépés után a program kiírja, ha a következő fél `sakk`-ban, `matt`-ban vagy
+`patt`-ban van (`Tabla.allapot`). Matt és patt esetén a játszma véget ér.
+
 ## LSP: belefér-e a gyalog különleges szabályai az ős szerződésébe?
 
 **Igen.** A `Figura.lephet()` szerződése: tiszta függvény, csak pszeudo-szabályosságot
