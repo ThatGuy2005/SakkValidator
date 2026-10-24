@@ -40,6 +40,11 @@ public class Gyalog extends Figura {
     }
 
     @Override
+    public boolean atvaltozik(Mezo hova) {
+        return hova.sor() == (szin == Szin.FEHER ? 7 : 0);
+    }
+
+    @Override
     public char jel() {
         return szin == Szin.FEHER ? '♙' : '♟';
     }

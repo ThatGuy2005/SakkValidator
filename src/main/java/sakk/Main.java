@@ -36,7 +36,13 @@ public class Main {
                 System.out.println("szabálytalan: " + hiba);
                 continue;
             }
-            tabla.vegrehajt(honnan, hova);
+            char valasztas = 'V';
+            if (tabla.atvaltozas(honnan, hova)) {
+                System.out.print("Átváltozás (V/B/F/H, alap: V): ");
+                String v = in.hasNextLine() ? in.nextLine().trim() : "";
+                if (!v.isEmpty()) valasztas = v.charAt(0);
+            }
+            tabla.vegrehajt(honnan, hova, valasztas);
             System.out.println("szabályos");
             System.out.println(TablaNezet.rajzol(tabla));
             kiLep = kiLep.ellenfel();

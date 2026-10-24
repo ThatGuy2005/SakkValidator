@@ -68,9 +68,35 @@ public class Tabla {
 
     /** Végrehajtja a lépést (ellenőrzés nélkül): ütés esetén a célmezőn álló figura lekerül. */
     public void vegrehajt(Mezo honnan, Mezo hova) {
+        vegrehajt(honnan, hova, 'V');
+    }
+
+    /** Mint fent; ha a gyalog beér, a választott figurává változik (V/B/F/H, egyébként vezér). */
+    public void vegrehajt(Mezo honnan, Mezo hova, char atvaltozas) {
         Figura f = athelyez(honnan, hova);
         f.mozdult = true;
         utolsoLepes = new Lepes(honnan, hova, f);
+        if (f.atvaltozik(hova)) {
+            Figura uj = ujFigura(atvaltozas, f.szin);
+            uj.mozdult = true;
+            tesz(hova, uj);
+        }
+    }
+
+    /** Átváltozással járna-e a lépés? (A játékmenet ebből tudja, hogy kérdeznie kell.) */
+    public boolean atvaltozas(Mezo honnan, Mezo hova) {
+        Figura f = get(honnan);
+        return f != null && f.atvaltozik(hova);
+    }
+
+    /** Figura létrehozása a választott betűből; ez létrehozás, nem lépéslogika. */
+    private static Figura ujFigura(char betu, Szin szin) {
+        return switch (Character.toUpperCase(betu)) {
+            case 'B' -> new Bastya(szin);
+            case 'F' -> new Futo(szin);
+            case 'H' -> new Huszar(szin);
+            default -> new Vezer(szin);
+        };
     }
 
     /**

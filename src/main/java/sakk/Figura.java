@@ -28,6 +28,11 @@ public abstract class Figura {
     /** A figura Unicode jele (szín szerint). */
     public abstract char jel();
 
+    /** Át kell-e változnia, ha a hova mezőre ér? Alapesetben nem; csak a gyalog írja felül. */
+    public boolean atvaltozik(Mezo hova) {
+        return false;
+    }
+
     /** A célmező üres, vagy ellenfél áll rajta. */
     protected boolean celSzabad(Mezo hova, Tabla t) {
         Figura cel = t.get(hova);
