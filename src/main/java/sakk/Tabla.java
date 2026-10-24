@@ -3,6 +3,7 @@ package sakk;
 /** A sakktábla: 8×8 mező, mindegyiken egy figura vagy null. */
 public class Tabla {
     private final Figura[][] mezok = new Figura[8][8];
+    private Lepes utolsoLepes;
 
     /** A szabványos kezdőállás. */
     public static Tabla kezdoAllas() {
@@ -47,6 +48,14 @@ public class Tabla {
         if (f.szin != kiLep) return "az nem a te figurád";
         if (!f.lephet(honnan, hova, this)) return "a figura nem léphet így";
 
+        if (sancolas(f, honnan, hova)) {
+            if (sakkbanVan(kiLep)) return "sakkban nem lehet sáncolni";
+            Mezo koztes = new Mezo((honnan.oszlop() + hova.oszlop()) / 2, honnan.sor());
+            Tabla atkeles = masolat();
+            atkeles.athelyez(honnan, koztes);
+            if (atkeles.sakkbanVan(kiLep)) return "a király támadott mezőn haladna át";
+        }
+
         Tabla proba = masolat();
         proba.athelyez(honnan, hova);
         if (proba.sakkbanVan(kiLep)) return "a saját király sakkba kerülne";
@@ -61,13 +70,42 @@ public class Tabla {
     public void vegrehajt(Mezo honnan, Mezo hova) {
         Figura f = athelyez(honnan, hova);
         f.mozdult = true;
+        utolsoLepes = new Lepes(honnan, hova, f);
+    }
+
+    /**
+     * Az a mező, amelyre most en passant ütéssel lépni lehet (amelyen az ellenfél gyalogja
+     * az előző lépésben átugrott), vagy null.
+     */
+    public Mezo enPassantCel() {
+        // instanceof csak a gyalog kettős lépésének felismerésére
+        if (utolsoLepes == null || !(utolsoLepes.f() instanceof Gyalog)) return null;
+        Mezo h = utolsoLepes.honnan();
+        int dy = utolsoLepes.hova().sor() - h.sor();
+        if (Math.abs(dy) != 2) return null;
+        return new Mezo(h.oszlop(), h.sor() + dy / 2);
     }
 
     /** Csak a figurákat mozgatja; a figurák állapotát nem módosítja, így másolaton is biztonságos. */
     private Figura athelyez(Mezo honnan, Mezo hova) {
         Figura f = levesz(honnan);
+        if (sancolas(f, honnan, hova)) {
+            boolean rovid = hova.oszlop() > honnan.oszlop();
+            Mezo bastyaHonnan = new Mezo(rovid ? 7 : 0, honnan.sor());
+            Mezo bastyaHova = new Mezo(rovid ? 5 : 3, honnan.sor());
+            tesz(bastyaHova, levesz(bastyaHonnan));
+        }
+        // en passant: az ütött gyalog a célmező mögött, a kiinduló sorban áll
+        if (f instanceof Gyalog && hova.equals(enPassantCel())) {
+            levesz(new Mezo(hova.oszlop(), honnan.sor()));
+        }
         tesz(hova, f);
         return f;
+    }
+
+    /** Sáncolás-e: a király két oszlopot lép. (instanceof csak a sáncolás azonosítására.) */
+    private static boolean sancolas(Figura f, Mezo honnan, Mezo hova) {
+        return f instanceof Kiraly && Math.abs(hova.oszlop() - honnan.oszlop()) == 2;
     }
 
     /** Támadja-e a megadott színű fél az m mezőt? Minden figurát a saját lephet()-jével kérdez meg. */
@@ -96,6 +134,7 @@ public class Tabla {
     /** Sekély másolat: ugyanazok a figura-objektumok, de saját mezőtömb. */
     private Tabla masolat() {
         Tabla t = new Tabla();
+        t.utolsoLepes = utolsoLepes;
         for (int o = 0; o < 8; o++) {
             t.mezok[o] = mezok[o].clone();
         }

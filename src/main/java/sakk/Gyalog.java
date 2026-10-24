@@ -28,9 +28,15 @@ public class Gyalog extends Figura {
             return cel == null && !t.utbanVan(honnan, hova);
         }
         if (Math.abs(dx) == 1 && dy == elore()) {
-            return cel != null && cel.szin != szin;
+            return (cel != null && cel.szin != szin) || enPassant(honnan, hova, t);
         }
         return false;
+    }
+
+    /** Az ellenfél gyalogja az előző lépésben épp a hova mezőn ugrott át. */
+    private boolean enPassant(Mezo honnan, Mezo hova, Tabla t) {
+        Figura atugro = t.get(new Mezo(hova.oszlop(), honnan.sor()));
+        return hova.equals(t.enPassantCel()) && atugro != null && atugro.szin != szin;
     }
 
     @Override
