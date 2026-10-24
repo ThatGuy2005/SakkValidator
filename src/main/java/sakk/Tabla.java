@@ -4,6 +4,24 @@ package sakk;
 public class Tabla {
     private final Figura[][] mezok = new Figura[8][8];
 
+    /** A szabványos kezdőállás. */
+    public static Tabla kezdoAllas() {
+        Tabla t = new Tabla();
+        for (Szin sz : Szin.values()) {
+            int hatso = sz == Szin.FEHER ? 0 : 7;
+            int gyalogSor = sz == Szin.FEHER ? 1 : 6;
+            Figura[] tisztek = {
+                    new Bastya(sz), new Huszar(sz), new Futo(sz), new Vezer(sz),
+                    new Kiraly(sz), new Futo(sz), new Huszar(sz), new Bastya(sz)
+            };
+            for (int o = 0; o < 8; o++) {
+                t.tesz(new Mezo(o, hatso), tisztek[o]);
+                t.tesz(new Mezo(o, gyalogSor), new Gyalog(sz));
+            }
+        }
+        return t;
+    }
+
     public Figura get(Mezo m) {
         return mezok[m.oszlop()][m.sor()];
     }
@@ -17,6 +35,13 @@ public class Tabla {
         Figura f = get(m);
         tesz(m, null);
         return f;
+    }
+
+    /** Végrehajtja a lépést (ellenőrzés nélkül): ütés esetén a célmezőn álló figura lekerül. */
+    public void vegrehajt(Mezo honnan, Mezo hova) {
+        Figura f = levesz(honnan);
+        tesz(hova, f);
+        f.mozdult = true;
     }
 
     /** Áll-e figura honnan és hova KÖZÖTT (egyenes vagy átlós vonalon). */
